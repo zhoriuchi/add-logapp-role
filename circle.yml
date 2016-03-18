@@ -39,5 +39,5 @@ test:
      - bundle exec knife solo cook root@logapp
      - bundle exec rake spec:logapp
    post:
-     ##- terraform plan -destroy
-     ##- terraform destroy -force
+     #- terraform plan -destroy
+     #- terraform destroy -force
