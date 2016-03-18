@@ -1,0 +1,43 @@
+machine:
+   ruby:
+      version: 2.0.0
+   environment:
+      TERRAFORM_VERSION: 0.6.6
+
+dependencies:
+  cache_directories:
+    - ~/.terraform
+  pre:
+    # circle ci error by knife old version
+    - gem clean knife-solo
+    - gem install knife-solo
+    - |
+      mkdir -p $HOME/.terraform
+      if [ -z "$(ls -A $HOME/.terraform)" ]; then
+        cd $HOME/.terraform
+        # not found1
+        #curl -LO https://dl.bintray.com/mitchellh/terraform/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+        curl -LO https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip 
+        unzip -o terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+        rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+      fi
+    - sudo cp -fR ~/.terraform/* /usr/local/bin
+
+test:
+   pre:
+     - terraform plan
+     - terraform apply
+     - cp /etc/hosts .
+     - sudo bash -c "cat hosts /tmp/hosts.txt | tee /etc/hosts"
+     # damedane
+     - sudo sudo mv /home/ubuntu/.rvm/gems/ruby-2.0.0-p598/bin/knife /usr/bin/knife
+     - knife -v 
+     # Waiting new server
+     - sleep 30
+   override:
+     - bundle exec knife solo prepare root@logapp
+     - bundle exec knife solo cook root@logapp
+     - bundle exec rake spec:logapp
+   post:
+     #- terraform plan -destroy
+     #- terraform destroy -force
