@@ -17,6 +17,14 @@ end
 
 host = ENV['TARGET_HOST']
 
+# start added by yoshi for circleCI
+if ENV['CIRCLECI']
+   `echo "StrictHostKeyChecking no" >> ~/.ssh/config`
+   `echo "UserKnownHostsFile=/dev/null" >> ~/.ssh/config`
+   options = Net::SSH::Config.for(host, ["~/.ssh/config"])
+   options[:user] = "root"
+else
+# end added by yoshi for circleCI
 `vagrant up #{host}`
 
 config = Tempfile.new('', Dir.tmpdir)
@@ -26,6 +34,8 @@ config.close
 options = Net::SSH::Config.for(host, [config.path])
 
 options[:user] ||= Etc.getlogin
+
+end
 
 set :host,        options[:host_name] || host
 set :ssh_options, options
